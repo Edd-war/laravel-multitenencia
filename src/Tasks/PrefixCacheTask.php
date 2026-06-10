@@ -3,6 +3,7 @@
 namespace Spatie\Multitenancy\Tasks;
 
 use Illuminate\Cache\Repository;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 use Spatie\Multitenancy\Contracts\IsTenant;
 
@@ -21,6 +22,9 @@ class PrefixCacheTask implements SwitchTenantTask
         $this->cacheKeyBase ??= 'tenant_id_';
     }
 
+    /**
+     * @param  IsTenant&Model  $tenant
+     */
     public function makeCurrent(IsTenant $tenant): void
     {
         $this->setCachePrefix($this->cacheKeyBase.$tenant->getKey());
