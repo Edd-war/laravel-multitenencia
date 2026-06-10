@@ -1,6 +1,6 @@
 ---
 title: v4
-slogan: An unopinionated multitenancy package for Laravel apps
-githubUrl: https://github.com/spatie/laravel-multitenancy
+slogan: Un paquete de Multitenencia sin opiniones para aplicaciones Laravel
+githubUrl: https://github.com/spatie/laravel-Multitenencia
 branch: main
 ---

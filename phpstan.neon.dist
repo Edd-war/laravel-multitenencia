@@ -7,6 +7,9 @@ parameters:
         - src
         - config
         - database
+        - tests/TestClasses/Usuario.php
+    scanDirectories:
+        - tests
     tmpDir: build/phpstan
     checkOctaneCompatibility: true
-    reportUnmatchedIgnoredErrors: false
+    reportUnmatchedIgnoredErrors: true

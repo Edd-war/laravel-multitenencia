@@ -139,24 +139,24 @@ $lastTag = try {
 	$null
 }
 if (-not $lastTag) {
-	$lastTag = "v4.1.1"
-	Write-Warning "No se encontró tag anterior. Usando $lastTag como base."
+	$newVersion = "v13.0.0"
+	Write-Warning "No se encontró tag anterior. Forzando inicio en $newVersion."
 }
-Write-Info "Última versión: $lastTag"
+else {
+	# Calcular nueva versión
+	$versionParts = $lastTag -replace "^v", "" -split "\."
+	$major = [int]$versionParts[0]
+	$minor = [int]$versionParts[1]
+	$patch = [int]$versionParts[2]
 
-# Calcular nueva versión
-$versionParts = $lastTag -replace "^v", "" -split "\."
-$major = [int]$versionParts[0]
-$minor = [int]$versionParts[1]
-$patch = [int]$versionParts[2]
+	switch ($Type) {
+		"major" { $major++; $minor = 0; $patch = 0 }
+		"minor" { $minor++; $patch = 0 }
+		"patch" { $patch++ }
+	}
 
-switch ($Type) {
-	"major" { $major++; $minor = 0; $patch = 0 }
-	"minor" { $minor++; $patch = 0 }
-	"patch" { $patch++ }
+	$newVersion = "v$major.$minor.$patch"
 }
-
-$newVersion = "v$major.$minor.$patch"
 Write-Success "Nueva versión: $newVersion"
 
 # Confirmar

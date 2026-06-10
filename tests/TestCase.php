@@ -1,33 +1,77 @@
 <?php
 
-namespace Spatie\Multitenancy\Tests;
+namespace Eddwar\Multitenencia\Tests;
 
+use Eddwar\Multitenencia\Models\Inquilino;
+use Eddwar\Multitenencia\MultitenenciaServiceProvider;
+use Eddwar\Multitenencia\Tests\Feature\Comandos\TestClasses\ComandoNoopInquilino;
 use Illuminate\Console\Application as Artisan;
+use Illuminate\Database\Connectors\SQLiteConnector;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Database\SQLiteConnection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\View;
 use Orchestra\Testbench\TestCase as Orchestra;
-use Spatie\Multitenancy\Models\Tenant;
-use Spatie\Multitenancy\MultitenancyServiceProvider;
-use Spatie\Multitenancy\Tests\Feature\Commands\TestClasses\TenantNoopCommand;
 
 abstract class TestCase extends Orchestra
 {
+    /** @var mixed */
+    public $inquilino;
+
+    /** @var mixed */
+    public $valuestore;
+
+    /** @var mixed */
+    public $tenantFinder;
+
+    /** @var mixed */
+    public $tenants;
+
+    /** @var mixed */
+    public $anotherInquilino;
+
     protected function setUp(): void
     {
+        $tempDir = __DIR__.'/temp';
+        if (! file_exists($tempDir)) {
+            mkdir($tempDir, 0777, true);
+        }
+
+        $propietarioDb = $tempDir.'/propietario.sqlite';
+        if (file_exists($propietarioDb)) {
+            @unlink($propietarioDb);
+        }
+        touch($propietarioDb);
+
+        // Clean up any old tenant sqlite files
+        foreach (glob($tempDir.'/laravel_mt_tenant_*.sqlite') as $file) {
+            @unlink($file);
+        }
+
         parent::setUp();
 
         Factory::guessFactoryNamesUsing(
-            fn (string $modelName) => 'Spatie\\Multitenancy\\Database\\Factories\\'.class_basename($modelName).'Factory'
+            fn (string $modelName) => 'Eddwar\\Multitenencia\\Database\\Factories\\'.class_basename($modelName).'Factory'
         );
 
         $this->migrateDb();
 
-        Tenant::truncate();
+        Inquilino::truncate();
 
         DB::table('jobs')->truncate();
 
         View::addLocation(__DIR__.'/stubs/views');
+    }
+
+    protected function tearDown(): void
+    {
+        if ($this->app && $this->app->resolved('db')) {
+            foreach ($this->app['db']->getConnections() as $connection) {
+                $connection->disconnect();
+            }
+        }
+
+        parent::tearDown();
     }
 
     protected function getPackageProviders($app)
@@ -35,7 +79,7 @@ abstract class TestCase extends Orchestra
         $this->bootCommands();
 
         return [
-            MultitenancyServiceProvider::class,
+            MultitenenciaServiceProvider::class,
         ];
     }
 
@@ -43,7 +87,7 @@ abstract class TestCase extends Orchestra
     {
         Artisan::starting(function ($artisan) {
             $artisan->resolveCommands([
-                TenantNoopCommand::class,
+                ComandoNoopInquilino::class,
             ]);
         });
 
@@ -52,11 +96,11 @@ abstract class TestCase extends Orchestra
 
     protected function migrateDb(): self
     {
-        $landLordMigrationsPath = realpath(__DIR__.'/database/migrations/landlord');
-        $landLordMigrationsPath = str_replace('\\', '/', $landLordMigrationsPath);
+        $propietarioMigrationsPath = realpath(__DIR__.'/database/migrations/propietario');
+        $propietarioMigrationsPath = str_replace('\\', '/', $propietarioMigrationsPath);
 
         $this
-            ->artisan("migrate --database=landlord --path={$landLordMigrationsPath} --realpath")
+            ->artisan("migrate --database=propietario --path={$propietarioMigrationsPath} --realpath")
             ->assertExitCode(0);
 
         /*
@@ -71,31 +115,41 @@ abstract class TestCase extends Orchestra
 
     public function getEnvironmentSetUp($app)
     {
-        config(['database.default' => 'landlord']);
+        config(['database.default' => 'propietario']);
 
-        config()->set('multitenancy.tenant_database_connection_name', 'tenant');
+        config()->set('multitenencia.nombre_de_conexion_de_la_base_de_datos_del_inquilino', 'tenant');
 
-        config()->set('multitenancy.landlord_database_connection_name', 'landlord');
+        config()->set('multitenencia.nombre_de_conexion_de_la_base_de_datos_del_propietario', 'propietario');
 
         config([
-            'database.connections.landlord' => [
-                'driver' => 'mysql',
-                'username' => env('DB_USERNAME', 'root'),
-                'host' => env('DB_HOST', '127.0.0.1'),
-                'port' => env('DB_PORT', '3306'),
-                'password' => env('DB_PASSWORD'),
-                'database' => 'laravel_mt_landlord',
+            'database.connections.propietario' => [
+                'driver' => 'sqlite',
+                'database' => __DIR__.'/temp/propietario.sqlite',
+                'prefix' => '',
             ],
 
             'database.connections.tenant' => [
-                'driver' => 'mysql',
-                'username' => env('DB_USERNAME', 'root'),
-                'host' => env('DB_HOST', '127.0.0.1'),
-                'port' => env('DB_PORT', '3306'),
-                'password' => env('DB_PASSWORD'),
-                'database' => null,
+                'driver' => 'sqlite',
+                'database' => ':memory:',
+                'prefix' => '',
             ],
         ]);
+
+        $app['db']->extend('tenant', function ($config, $name) {
+            $databaseName = $config['database'] ?? '';
+            if ($databaseName && $databaseName !== ':memory:' && ! str_contains($databaseName, '/') && ! str_contains($databaseName, '\\')) {
+                $databasePath = __DIR__.'/temp/'.$databaseName.'.sqlite';
+                if (! file_exists($databasePath)) {
+                    @touch($databasePath);
+                }
+                $config['database'] = $databasePath;
+            }
+
+            $connector = new SQLiteConnector;
+            $pdo = $connector->connect($config);
+
+            return new SQLiteConnection($pdo, $config['database'], $config['prefix'], $config);
+        });
 
         config()->set('queue.default', 'database');
 
@@ -104,7 +158,7 @@ abstract class TestCase extends Orchestra
             'table' => 'jobs',
             'queue' => 'default',
             'retry_after' => 90,
-            'connection' => 'landlord',
+            'connection' => 'propietario',
         ]);
     }
 }

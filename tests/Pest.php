@@ -1,8 +1,8 @@
 <?php
 
+use Eddwar\Multitenencia\Models\Inquilino;
+use Eddwar\Multitenencia\Tests\TestCase;
 use Illuminate\Support\Facades\Schema;
-use Spatie\Multitenancy\Models\Tenant;
-use Spatie\Multitenancy\Tests\TestCase;
 
 use function PHPUnit\Framework\assertFalse;
 use function PHPUnit\Framework\assertTrue;
@@ -21,18 +21,18 @@ uses(TestCase::class)->in('Feature');
 |--------------------------------------------------------------------------
 */
 
-function tenantHasDatabaseTable(Tenant $tenant, string $tableName): bool
+function tenantHasDatabaseTable(Inquilino $tenant, string $tableName): bool
 {
-    $tenant->makeCurrent();
+    $tenant->hacerActual();
 
     $tenantHasDatabaseTable = Schema::connection('tenant')->hasTable($tableName);
 
-    Tenant::forgetCurrent();
+    Inquilino::olvidarActual();
 
     return $tenantHasDatabaseTable;
 }
 
-function assertTenantDatabaseHasTable(Tenant $tenant, string $tableName): void
+function assertTenantDatabaseHasTable(Inquilino $tenant, string $tableName): void
 {
     $tenantHasDatabaseTable = tenantHasDatabaseTable($tenant, $tableName);
 
@@ -42,7 +42,7 @@ function assertTenantDatabaseHasTable(Tenant $tenant, string $tableName): void
     );
 }
 
-function assertTenantDatabaseDoesNotHaveTable(Tenant $tenant, string $tableName): void
+function assertTenantDatabaseDoesNotHaveTable(Inquilino $tenant, string $tableName): void
 {
     $tenantHasDatabaseTable = tenantHasDatabaseTable($tenant, $tableName);
 

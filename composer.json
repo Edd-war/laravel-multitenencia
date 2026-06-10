@@ -1,12 +1,13 @@
 {
     "name": "edd-war/laravel-multi-inquilinos",
-    "description": "Make your Laravel app usable by multiple tenants",
+    "description": "Hace que tu API REST o tu Laravel sean utilizables por multiples inquilinos",
+    "type": "library",
+    "license": "MIT",
     "keywords": [
         "edd-war",
         "laravel-multi-inquilinos"
     ],
     "homepage": "https://github.com/edd-war/laravel-multi-inquilinos",
-    "license": "MIT",
     "authors": [
         {
             "name": "Eduardo Arroyo Morales",
@@ -33,16 +34,16 @@
     },
     "autoload": {
         "psr-4": {
-            "Spatie\\Multitenancy\\": "src",
-            "Spatie\\Multitenancy\\Database\\Factories\\": "database/factories"
+            "Eddwar\\Multitenencia\\": "src",
+            "Eddwar\\Multitenencia\\Database\\Factories\\": "database/factories"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Spatie\\Multitenancy\\Tests\\": "tests"
+            "Eddwar\\Multitenencia\\Tests\\": "tests"
         },
         "classmap": [
-            "tests/database/migrations/landlord",
+            "tests/database/migrations/propietario",
             "tests/database/migrations"
         ]
     },
@@ -62,10 +63,10 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Spatie\\Multitenancy\\MultitenancyServiceProvider"
+                "Eddwar\\Multitenencia\\MultitenenciaServiceProvider"
             ],
             "aliases": {
-                "Multitenancy": "Spatie\\Multitenancy\\MultitenancyFacade"
+                "Multitenencia": "Eddwar\\Multitenencia\\MultitenenciaFacade"
             }
         }
     },

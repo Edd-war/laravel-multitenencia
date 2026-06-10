@@ -1,14 +1,14 @@
 <?php
 
-namespace Spatie\Multitenancy\Database\Factories;
+namespace Eddwar\Multitenencia\Database\Factories;
 
+use Eddwar\Multitenencia\Tests\TestClasses\Usuario;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
-use Spatie\Multitenancy\Tests\TestClasses\User;
 
 class UserFactory extends Factory
 {
-    protected $model = User::class;
+    protected $model = Usuario::class;
 
     public function definition(): array
     {
