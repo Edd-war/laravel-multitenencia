@@ -71,7 +71,7 @@ trait ImplementaInquilino
 
         $prefix = (string) config('multitenencia.prefijo_de_base_de_datos_del_inquilino', '');
         if ($prefix && $dbName && ! str_starts_with($dbName, $prefix)) {
-            $dbName = $prefix . $dbName;
+            $dbName = $prefix.$dbName;
         }
 
         if ($dbName && $dbName !== ':memory:' && ! str_contains($dbName, '/') && ! str_contains($dbName, '\\')) {

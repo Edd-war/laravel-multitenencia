@@ -16,7 +16,8 @@ class InquilinoResolver
 
     public function resolverInquilinoParaPeticion(Request $request): ?EsInquilino
     {
-        $finder = new BuscadorDeInquilinosPorHeaders();
+        $finder = new BuscadorDeInquilinosPorHeaders;
+
         return $finder->buscarParaPeticion($request);
     }
 

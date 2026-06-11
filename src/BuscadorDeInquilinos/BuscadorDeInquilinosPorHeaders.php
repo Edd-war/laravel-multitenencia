@@ -29,7 +29,7 @@ class BuscadorDeInquilinosPorHeaders extends BuscadorDeInquilinos
                 if (filter_var($contextHeader, FILTER_VALIDATE_URL)) {
                     $parsedHost = parse_url($contextHeader, PHP_URL_HOST);
                     $port = parse_url($contextHeader, PHP_URL_PORT);
-                    $domain = $parsedHost . ($port ? ":$port" : '');
+                    $domain = $parsedHost.($port ? ":$port" : '');
                 }
 
                 $tenant = $tenantModel->newQuery()->where('dominio', $domain)->first();
@@ -71,7 +71,7 @@ class BuscadorDeInquilinosPorHeaders extends BuscadorDeInquilinos
         if (in_array('host', $strategies, true)) {
             $host = $request->getHost();
             $port = $request->getPort();
-            $fullHost = $host . ($port && $port != 80 && $port != 443 ? ":$port" : '');
+            $fullHost = $host.($port && $port != 80 && $port != 443 ? ":$port" : '');
 
             // Validamos contra dominios propietarios
             $landlordDomains = $this->dominiosPropietarios();

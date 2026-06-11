@@ -138,6 +138,7 @@ class MultitenenciaCacheServiceProvider extends ServiceProvider
     {
         try {
             $containerKey = config('multitenencia.clave_de_contenedor_del_inquilino_actual', 'currentTenant');
+
             return app()->bound($containerKey) && app($containerKey) !== null;
         } catch (\Exception $e) {
             return false;
@@ -170,6 +171,7 @@ class MultitenenciaCacheServiceProvider extends ServiceProvider
 
             if (! $safeClearEnabled) {
                 Cache::clear();
+
                 return true;
             }
 
@@ -197,6 +199,7 @@ class MultitenenciaCacheServiceProvider extends ServiceProvider
             return true;
         } catch (\Exception $e) {
             Log::info('Cache clear handled gracefully: '.$e->getMessage());
+
             return false;
         }
     }
@@ -221,6 +224,7 @@ class MultitenenciaCacheServiceProvider extends ServiceProvider
             return true;
         } catch (\Exception $e) {
             Log::info('Database cache clear handled gracefully: '.$e->getMessage());
+
             return false;
         }
     }

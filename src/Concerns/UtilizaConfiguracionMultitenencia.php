@@ -77,4 +77,3 @@ trait UtilizaConfiguracionMultitenencia
         return (string) config('multitenencia.header_de_id', 'X-Sitio-ID');
     }
 }
-

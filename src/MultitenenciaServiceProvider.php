@@ -6,6 +6,8 @@ use Eddwar\Multitenencia\Commands\ComandoArtisanInquilinos;
 use Eddwar\Multitenencia\Commands\ComandoMigracionInquilinos;
 use Eddwar\Multitenencia\Concerns\UtilizaConfiguracionMultitenencia;
 use Eddwar\Multitenencia\Contracts\EsInquilino;
+use Eddwar\Multitenencia\Providers\MultitenenciaCacheServiceProvider;
+use Eddwar\Multitenencia\Support\InquilinoResolver;
 use Illuminate\Support\Facades\Event;
 use Laravel\Octane\Events\RequestReceived as OctaneRequestReceived;
 use Laravel\Octane\Events\RequestTerminated as OctaneRequestTerminated;
@@ -32,14 +34,14 @@ class MultitenenciaServiceProvider extends PackageServiceProvider
     {
         $this->app->bind(EsInquilino::class, config('multitenencia.modelo_del_inquilino'));
 
-        $this->app->singleton(\Eddwar\Multitenencia\Support\InquilinoResolver::class, fn () => new \Eddwar\Multitenencia\Support\InquilinoResolver());
+        $this->app->singleton(InquilinoResolver::class, fn () => new InquilinoResolver);
 
         $this->app->bind(Multitenencia::class, fn ($app) => new Multitenencia($app));
 
         $this->detectsLaravelOctane();
 
         if (config('multitenencia.cache.habilitado', false)) {
-            $this->app->register(\Eddwar\Multitenencia\Providers\MultitenenciaCacheServiceProvider::class);
+            $this->app->register(MultitenenciaCacheServiceProvider::class);
         }
     }
 

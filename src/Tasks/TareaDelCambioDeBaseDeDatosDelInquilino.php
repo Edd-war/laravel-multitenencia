@@ -49,6 +49,7 @@ class TareaDelCambioDeBaseDeDatosDelInquilino implements TareaDeCambioDeInquilin
                     @touch($path);
                 }
             }
+
             return;
         }
 
@@ -80,6 +81,10 @@ class TareaDelCambioDeBaseDeDatosDelInquilino implements TareaDeCambioDeInquilin
         config([
             "database.connections.{$tenantConnectionName}.database" => $databaseName,
         ]);
+
+        if (config('multitenencia.evitar_cambio_de_conexion_en_pruebas', false) && app()->runningUnitTests()) {
+            return;
+        }
 
         app('db')->extend($tenantConnectionName, function ($config, $name) use ($databaseName) {
             $config['database'] = $databaseName;
