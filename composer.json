@@ -1,13 +1,13 @@
 {
-    "name": "edd-war/laravel-multi-inquilinos",
+    "name": "edd-war/laravel-multitenencia",
     "description": "Hace que tu API REST o tu Laravel sean utilizables por multiples inquilinos",
     "type": "library",
     "license": "MIT",
     "keywords": [
         "edd-war",
-        "laravel-multi-inquilinos"
+        "laravel-multitenencia"
     ],
-    "homepage": "https://github.com/edd-war/laravel-multi-inquilinos",
+    "homepage": "https://github.com/edd-war/laravel-multitenencia",
     "authors": [
         {
             "name": "Eduardo Arroyo Morales",
