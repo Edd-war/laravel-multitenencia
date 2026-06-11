@@ -69,14 +69,19 @@ trait ImplementaInquilino
     {
         $dbName = $this->base_de_datos;
 
+        $prefix = (string) config('multitenencia.prefijo_de_base_de_datos_del_inquilino', '');
+        if ($prefix && $dbName && ! str_starts_with($dbName, $prefix)) {
+            $dbName = $prefix . $dbName;
+        }
+
         if ($dbName && $dbName !== ':memory:' && ! str_contains($dbName, '/') && ! str_contains($dbName, '\\')) {
             $tenantConnectionName = config('multitenencia.nombre_de_conexion_de_la_base_de_datos_del_inquilino', 'tenant');
             if (config("database.connections.{$tenantConnectionName}.driver") === 'sqlite') {
-                $tempDir = __DIR__.'/../../../tests/temp';
-                if (! file_exists($tempDir)) {
-                    @mkdir($tempDir, 0777, true);
+                $baseDir = function_exists('database_path') ? database_path() : __DIR__.'/../../../tests/temp';
+                if (! file_exists($baseDir)) {
+                    @mkdir($baseDir, 0777, true);
                 }
-                $databasePath = $tempDir.'/'.$dbName.'.sqlite';
+                $databasePath = $baseDir.'/'.$dbName.'.sqlite';
                 if (! file_exists($databasePath)) {
                     @touch($databasePath);
                 }

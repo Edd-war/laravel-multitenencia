@@ -32,9 +32,15 @@ class MultitenenciaServiceProvider extends PackageServiceProvider
     {
         $this->app->bind(EsInquilino::class, config('multitenencia.modelo_del_inquilino'));
 
+        $this->app->singleton(\Eddwar\Multitenencia\Support\InquilinoResolver::class, fn () => new \Eddwar\Multitenencia\Support\InquilinoResolver());
+
         $this->app->bind(Multitenencia::class, fn ($app) => new Multitenencia($app));
 
         $this->detectsLaravelOctane();
+
+        if (config('multitenencia.cache.habilitado', false)) {
+            $this->app->register(\Eddwar\Multitenencia\Providers\MultitenenciaCacheServiceProvider::class);
+        }
     }
 
     protected function detectsLaravelOctane(): static

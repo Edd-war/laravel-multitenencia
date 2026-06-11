@@ -37,7 +37,7 @@ class ComandoMigracionInquilinos extends Command
 
     protected function getMigrationType(): string
     {
-        return 'tenant';
+        return 'inquilino';
     }
 
     /**

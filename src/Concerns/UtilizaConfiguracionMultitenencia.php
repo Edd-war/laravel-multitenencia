@@ -46,4 +46,35 @@ trait UtilizaConfiguracionMultitenencia
     {
         return Arr::wrap(config('multitenencia.campos_de_busqueda_artisan_para_inquilinos'));
     }
+
+    public function dominiosPropietarios(): array
+    {
+        return Arr::wrap(config('multitenencia.dominios_propietarios'));
+    }
+
+    public function prefijoDeBaseDeDatosDelInquilino(): string
+    {
+        return (string) config('multitenencia.prefijo_de_base_de_datos_del_inquilino', '');
+    }
+
+    public function crearBaseDeDatosSiNoExiste(): bool
+    {
+        return (bool) config('multitenencia.crear_base_de_datos_si_no_existe', false);
+    }
+
+    public function estrategiasDeBusqueda(): array
+    {
+        return Arr::wrap(config('multitenencia.estrategias_de_busqueda'));
+    }
+
+    public function headerDeContexto(): string
+    {
+        return (string) config('multitenencia.header_de_contexto', 'X-Sitio-Context');
+    }
+
+    public function headerDeId(): string
+    {
+        return (string) config('multitenencia.header_de_id', 'X-Sitio-ID');
+    }
 }
+

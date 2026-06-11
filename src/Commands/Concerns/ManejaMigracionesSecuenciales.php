@@ -26,10 +26,12 @@ trait ManejaMigracionesSecuenciales
             return $optionTarget;
         }
 
-        return match ($type) {
-            'tenant' => config('multitenencia.nombre_de_conexion_de_la_base_de_datos_del_inquilino', 'tenant'),
-            'propietario' => config('multitenencia.propietario_database_connection_name', 'propietario'),
-            default => $type,
+        $typeNormalized = ($type === 'tenant') ? 'inquilino' : $type;
+
+        return match ($typeNormalized) {
+            'inquilino' => config('multitenencia.nombre_de_conexion_de_la_base_de_datos_del_inquilino', 'inquilino'),
+            'propietario' => config('multitenencia.nombre_de_conexion_de_la_base_de_datos_del_propietario', 'propietario'),
+            default => $typeNormalized,
         };
     }
 
@@ -93,7 +95,7 @@ trait ManejaMigracionesSecuenciales
             $this->newLine();
         }
 
-        $commandBase = $type === 'tenant' ? 'tenant' : 'propietario';
+        $commandBase = ($type === 'tenant' || $type === 'inquilino') ? 'tenant' : 'propietario';
         $this->warn('🚀 Uso práctico:');
         $this->line("  php artisan {$commandBase}:migrate --module=01-defaults");
         if ($this->getName() && ! str_ends_with($this->getName(), ':status')) {
@@ -114,7 +116,7 @@ trait ManejaMigracionesSecuenciales
             $type = $this->getMigrationType();
             $connection = $this->getDatabaseConnection();
 
-            if ($type === 'tenant') {
+            if ($type === 'tenant' || $type === 'inquilino') {
                 $exitCode = Artisan::call('tenants:artisan', [
                     'artisanCommand' => "migrate:status --database={$connection} --path={$path}",
                 ], $buffer);

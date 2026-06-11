@@ -137,4 +137,46 @@ return [
      */
     'ruta_de_migraciones_del_propietario' => 'database/migrations/propietario',
     'ruta_de_migraciones_del_inquilino' => 'database/migrations/inquilinos',
+
+    /*
+     * Los dominios que corresponden al propietario (landlord).
+     */
+    'dominios_propietarios' => [],
+
+    /*
+     * El prefijo que se aplicará automáticamente a los nombres de las bases de datos de los inquilinos.
+     */
+    'prefijo_de_base_de_datos_del_inquilino' => '',
+
+    /*
+     * Indica si se debe verificar y crear automáticamente la base de datos del inquilino si no existe al conectar.
+     */
+    'crear_base_de_datos_si_no_existe' => false,
+
+    /*
+     * Estrategias de búsqueda para la resolución de inquilinos vía headers/query params.
+     * Ejemplos de estrategias disponibles: 'header', 'id_header', 'query_param', 'host'.
+     * Por defecto se deja vacío para que sea opt-in de acuerdo a la configuración del usuario.
+     */
+    'estrategias_de_busqueda' => [],
+
+    /*
+     * Nombres de los headers utilizados por el BuscadorDeInquilinosPorHeaders.
+     */
+    'header_de_contexto' => 'X-Sitio-Context',
+    'header_de_id' => 'X-Sitio-ID',
+
+    /*
+     * Configuración del cache consciente del contexto multitenancy.
+     */
+    'cache' => [
+        'habilitado' => false,
+        'store_del_inquilino' => 'database',
+        'store_del_propietario' => 'database',
+        'conexion_del_inquilino' => 'inquilino',
+        'conexion_del_propietario' => 'propietario',
+        'prefijo_de_cache_del_inquilino' => 'tenant.',
+        'limpiar_cache_seguro' => true,
+    ],
 ];
+

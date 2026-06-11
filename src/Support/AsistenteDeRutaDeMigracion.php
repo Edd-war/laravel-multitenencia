@@ -14,7 +14,12 @@ class AsistenteDeRutaDeMigracion
      */
     public static function getBasePath(string $type): string
     {
-        return config("multitenencia.{$type}_migrations_path", "database/migrations/{$type}");
+        $type = $type === 'tenant' ? 'inquilino' : $type;
+        $configKey = $type === 'inquilino'
+            ? 'ruta_de_migraciones_del_inquilino'
+            : 'ruta_de_migraciones_del_propietario';
+
+        return config("multitenencia.{$configKey}", "database/migrations/{$type}");
     }
 
     /**
