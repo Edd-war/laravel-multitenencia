@@ -76,9 +76,14 @@ trait ImplementaInquilino
     public function obtenerNombreDeBaseDeDatos(): string
     {
         $dbName = $this->base_de_datos;
-
         $prefix = (string) config('multitenencia.prefijo_de_base_de_datos_del_inquilino', '');
-        if ($prefix && $dbName && ! str_starts_with($dbName, $prefix)) {
+
+        if (empty($dbName)) {
+            return rtrim($prefix, '_');
+        }
+
+        $cleanPrefix = rtrim($prefix, '_');
+        if ($prefix && ! str_starts_with($dbName, $prefix) && $dbName !== $cleanPrefix) {
             $dbName = $prefix.$dbName;
         }
 
