@@ -36,7 +36,7 @@ class MultitenenciaCacheServiceProvider extends ServiceProvider
         }
 
         $this->app->resolving('cache', function (mixed $cache, Application $app) {
-            $isTenantContext = $this->isTenantContext();
+            $isTenantContext = static::isTenantContext();
 
             if ($isTenantContext) {
                 $defaultStore = config('multitenencia.cache.store_del_inquilino', 'database');
@@ -69,7 +69,7 @@ class MultitenenciaCacheServiceProvider extends ServiceProvider
     protected function configureTenantAwareCacheStores(): void
     {
         $this->app->extend('cache', function (CacheManager $cache, Application $app) {
-            $isTenantContext = $this->isTenantContext();
+            $isTenantContext = static::isTenantContext();
 
             if ($isTenantContext) {
                 $this->configureTenantCache($cache);
@@ -102,7 +102,7 @@ class MultitenenciaCacheServiceProvider extends ServiceProvider
         }
 
         $prefix = config('multitenencia.cache.prefijo_de_cache_del_inquilino', 'tenant.');
-        $tenantId = $this->getCurrentTenantId();
+        $tenantId = static::getCurrentTenantId();
 
         if ($tenantId) {
             $originalPrefix = config('cache.prefix');
@@ -134,7 +134,7 @@ class MultitenenciaCacheServiceProvider extends ServiceProvider
     /**
      * Detecta si estamos en contexto de tenant
      */
-    protected function isTenantContext(): bool
+    public static function isTenantContext(): bool
     {
         try {
             $containerKey = config('multitenencia.clave_de_contenedor_del_inquilino_actual', 'currentTenant');
@@ -148,7 +148,7 @@ class MultitenenciaCacheServiceProvider extends ServiceProvider
     /**
      * Obtiene el ID del tenant actual
      */
-    protected function getCurrentTenantId(): ?string
+    public static function getCurrentTenantId(): ?string
     {
         try {
             $containerKey = config('multitenencia.clave_de_contenedor_del_inquilino_actual', 'currentTenant');
@@ -163,36 +163,80 @@ class MultitenenciaCacheServiceProvider extends ServiceProvider
     /**
      * Limpia el cache de forma segura en entorno multitenancy
      */
-    public static function safeClearCache(): bool
+    public static function safeClearCache(?object $command = null): bool
     {
         try {
             $multitenancyConfig = config('multitenencia.cache', []);
             $safeClearEnabled = $multitenancyConfig['limpiar_cache_seguro'] ?? true;
 
             if (! $safeClearEnabled) {
-                Cache::clear();
+                if ($command && method_exists($command, 'outputComponents')) {
+                    $command->outputComponents()->task('caché de la aplicación (insegura)', function () {
+                        Cache::clear();
+
+                        return true;
+                    });
+                } else {
+                    Cache::clear();
+                }
 
                 return true;
             }
 
-            $instance = app(static::class);
-            $isTenant = $instance->isTenantContext();
+            $isTenant = static::isTenantContext();
 
             if ($isTenant) {
                 $cacheStore = $multitenancyConfig['store_del_inquilino'] ?? config('cache.default');
                 $connection = $multitenancyConfig['conexion_del_inquilino'] ?? 'inquilino';
+                $contextName = 'inquilino';
             } else {
                 $cacheStore = $multitenancyConfig['store_del_propietario'] ?? config('cache.default');
                 $connection = $multitenancyConfig['conexion_del_propietario'] ?? 'propietario';
+                $contextName = 'propietario';
             }
 
-            if ($cacheStore !== config('cache.default')) {
-                Cache::store($cacheStore)->clear();
-            } else {
-                if (config('cache.default') === 'database') {
-                    $instance->safeClearDatabaseCache($connection);
+            $clearGeneralCache = function () use ($cacheStore, $connection) {
+                if ($cacheStore === 'database') {
+                    static::safeClearDatabaseCache($connection);
+                } elseif ($cacheStore !== config('cache.default')) {
+                    Cache::store($cacheStore)->clear();
                 } else {
-                    Cache::clear();
+                    if (config('cache.default') === 'database') {
+                        static::safeClearDatabaseCache($connection);
+                    } else {
+                        Cache::clear();
+                    }
+                }
+
+                return true;
+            };
+
+            if ($command && method_exists($command, 'outputComponents')) {
+                $command->outputComponents()->task("caché de multitenencia ($contextName)", $clearGeneralCache);
+            } else {
+                $clearGeneralCache();
+            }
+
+            // También limpiar la caché de permisos de laravel-autorizacion de forma segura si está configurada
+            if (config()->has('autorizacion.cache')) {
+                $clearPermissionsCache = function () {
+                    try {
+                        $permCacheStore = config('autorizacion.cache.store') != 'default'
+                            ? config('autorizacion.cache.store')
+                            : null;
+
+                        Cache::store($permCacheStore)->forget(config('autorizacion.cache.key', 'roles.permisos.cache'));
+                    } catch (\Exception $e) {
+                        Log::info('Autorizacion cache clear handled gracefully: '.$e->getMessage());
+                    }
+
+                    return true;
+                };
+
+                if ($command && method_exists($command, 'outputComponents')) {
+                    $command->outputComponents()->task('caché de permisos', $clearPermissionsCache);
+                } else {
+                    $clearPermissionsCache();
                 }
             }
 
@@ -207,17 +251,17 @@ class MultitenenciaCacheServiceProvider extends ServiceProvider
     /**
      * Limpia cache de base de datos de forma segura
      */
-    protected function safeClearDatabaseCache(string $connection): bool
+    public static function safeClearDatabaseCache(string $connection): bool
     {
         try {
             $tableName = config('cache.stores.database.table', 'cache');
             $lockTableName = config('cache.stores.database.lock_table', 'cache_locks');
 
-            if ($this->tableExists($connection, $tableName)) {
+            if (static::tableExists($connection, $tableName)) {
                 DB::connection($connection)->table($tableName)->delete();
             }
 
-            if ($this->tableExists($connection, $lockTableName)) {
+            if (static::tableExists($connection, $lockTableName)) {
                 DB::connection($connection)->table($lockTableName)->delete();
             }
 
@@ -232,7 +276,7 @@ class MultitenenciaCacheServiceProvider extends ServiceProvider
     /**
      * Verifica si una tabla existe en la conexión especificada
      */
-    protected function tableExists(string $connection, string $table): bool
+    public static function tableExists(string $connection, string $table): bool
     {
         try {
             return Schema::connection($connection)->hasTable($table);
@@ -246,8 +290,7 @@ class MultitenenciaCacheServiceProvider extends ServiceProvider
      */
     public static function getContextAwareCacheStore(): string
     {
-        $instance = app(static::class);
-        $isTenant = $instance->isTenantContext();
+        $isTenant = static::isTenantContext();
         $multitenancyConfig = config('multitenencia.cache', []);
 
         if ($isTenant) {

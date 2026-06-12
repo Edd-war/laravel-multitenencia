@@ -1,12 +1,15 @@
 <?php
 
-namespace Eddwar\Multitenencia;
+namespace Eddwar\Multitenencia\Providers;
 
 use Eddwar\Multitenencia\Commands\ComandoArtisanInquilinos;
 use Eddwar\Multitenencia\Commands\ComandoMigracionInquilinos;
+use Eddwar\Multitenencia\Commands\ComandoMigrateRollbackInquilinos;
+use Eddwar\Multitenencia\Commands\ComandoMigrationStatusInquilinos;
+use Eddwar\Multitenencia\Commands\ComandoRollbackInquilinos;
 use Eddwar\Multitenencia\Concerns\UtilizaConfiguracionMultitenencia;
 use Eddwar\Multitenencia\Contracts\EsInquilino;
-use Eddwar\Multitenencia\Providers\MultitenenciaCacheServiceProvider;
+use Eddwar\Multitenencia\Multitenencia;
 use Eddwar\Multitenencia\Support\InquilinoResolver;
 use Illuminate\Support\Facades\Event;
 use Laravel\Octane\Events\RequestReceived as OctaneRequestReceived;
@@ -27,6 +30,9 @@ class MultitenenciaServiceProvider extends PackageServiceProvider
             ->hasCommands([
                 ComandoArtisanInquilinos::class,
                 ComandoMigracionInquilinos::class,
+                ComandoRollbackInquilinos::class,
+                ComandoMigrateRollbackInquilinos::class,
+                ComandoMigrationStatusInquilinos::class,
             ]);
     }
 

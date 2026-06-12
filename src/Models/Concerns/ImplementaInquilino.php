@@ -6,7 +6,12 @@ use Eddwar\Multitenencia\Actions\AccionHacerInquilinoActual;
 use Eddwar\Multitenencia\Actions\AccionOlvidarInquilinoActual;
 use Eddwar\Multitenencia\Contracts\EsInquilino;
 use Eddwar\Multitenencia\InquilinoCollection;
+use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @mixin Model
+ * @mixin EsInquilino
+ */
 trait ImplementaInquilino
 {
     public function hacerActual(): static
@@ -57,7 +62,10 @@ trait ImplementaInquilino
 
     public function esActual(): bool
     {
-        return static::actual()?->getKey() === $this->getKey();
+        /** @var Model|null $actual */
+        $actual = static::actual();
+
+        return $actual?->getKey() === $this->getKey();
     }
 
     public static function olvidarActual(): ?static

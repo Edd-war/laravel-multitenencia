@@ -18,7 +18,7 @@ class BuscadorDeInquilinosPorHeaders extends BuscadorDeInquilinos
             return null;
         }
 
-        /** @var Model $tenantModel */
+        /** @var Model&EsInquilino $tenantModel */
         $tenantModel = app(EsInquilino::class);
 
         // 1. Estrategia 'header' (X-Sitio-Context por defecto)

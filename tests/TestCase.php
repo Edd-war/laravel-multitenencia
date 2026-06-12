@@ -3,7 +3,7 @@
 namespace Eddwar\Multitenencia\Tests;
 
 use Eddwar\Multitenencia\Models\Inquilino;
-use Eddwar\Multitenencia\MultitenenciaServiceProvider;
+use Eddwar\Multitenencia\Providers\MultitenenciaServiceProvider;
 use Eddwar\Multitenencia\Tests\Feature\Comandos\TestClasses\ComandoNoopInquilino;
 use Illuminate\Console\Application as Artisan;
 use Illuminate\Database\Connectors\SQLiteConnector;

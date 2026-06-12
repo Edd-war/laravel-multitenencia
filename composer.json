@@ -63,7 +63,7 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Eddwar\\Multitenencia\\MultitenenciaServiceProvider"
+                "Eddwar\\Multitenencia\\Providers\\MultitenenciaServiceProvider"
             ],
             "aliases": {
                 "Multitenencia": "Eddwar\\Multitenencia\\MultitenenciaFacade"
