@@ -167,6 +167,13 @@ return [
     'header_de_id' => 'X-Sitio-ID',
 
     /*
+     * Prefijos de ruta que requieren un tenant explícito en la petición.
+     * Usado por HandlesMultitenancy::requiresExplicitTenant() en la aplicación.
+     * Ejemplo: ['api/articulos', 'api/promociones']
+     */
+    'rutas_con_tenant_explicito' => [],
+
+    /*
      * Configuración del cache consciente del contexto multitenancy.
      */
     'cache' => [

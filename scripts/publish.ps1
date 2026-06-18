@@ -88,8 +88,12 @@ if (-not $NoVerify) {
 	# Tests
 	Write-Info "Ejecutando tests..."
 	if (-not $DryRun) {
-		$testResult = composer test -- --no-progress 2>$null
-		if ($LASTEXITCODE -ne 0) {
+		$prevPref = $ErrorActionPreference
+		$ErrorActionPreference = "Continue"
+		composer test -- --no-progress 2>&1 | Out-Null
+		$testExitCode = $LASTEXITCODE
+		$ErrorActionPreference = $prevPref
+		if ($testExitCode -ne 0) {
 			Write-Error "Los tests fallaron. Usa -NoVerify para omitir."
 			# Re-ejecutar sin redirección para que el usuario vea el error real
 			composer test
@@ -114,8 +118,12 @@ if (-not $NoVerify) {
 	# PHPStan
 	Write-Info "Ejecutando análisis estático..."
 	if (-not $DryRun) {
-		$analyseResult = composer analyse -- --no-progress 2>$null
-		if ($LASTEXITCODE -ne 0) {
+		$prevPref = $ErrorActionPreference
+		$ErrorActionPreference = "Continue"
+		composer analyse -- --no-progress 2>&1 | Out-Null
+		$analyseExitCode = $LASTEXITCODE
+		$ErrorActionPreference = $prevPref
+		if ($analyseExitCode -ne 0) {
 			Write-Error "PHPStan encontró errores. Usa -NoVerify para omitir."
 			# Re-ejecutar sin redirección para ver errores
 			composer analyse

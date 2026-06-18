@@ -201,11 +201,7 @@ class MultitenenciaCacheServiceProvider extends ServiceProvider
                 } elseif ($cacheStore !== config('cache.default')) {
                     Cache::store($cacheStore)->clear();
                 } else {
-                    if (config('cache.default') === 'database') {
-                        static::safeClearDatabaseCache($connection);
-                    } else {
-                        Cache::clear();
-                    }
+                    Cache::clear();
                 }
 
                 return true;

@@ -62,7 +62,6 @@ trait ImplementaInquilino
 
     public function esActual(): bool
     {
-        /** @var Model|null $actual */
         $actual = static::actual();
 
         return $actual?->getKey() === $this->getKey();
@@ -83,11 +82,11 @@ trait ImplementaInquilino
         }
 
         $cleanPrefix = rtrim($prefix, '_');
-        if ($prefix && ! str_starts_with($dbName, $prefix) && $dbName !== $cleanPrefix) {
+        if (! str_starts_with($dbName, $prefix) && $dbName !== $cleanPrefix) {
             $dbName = $prefix.$dbName;
         }
 
-        if ($dbName && $dbName !== ':memory:' && ! str_contains($dbName, '/') && ! str_contains($dbName, '\\')) {
+        if ($dbName !== ':memory:' && ! str_contains($dbName, '/') && ! str_contains($dbName, '\\')) {
             $tenantConnectionName = config('multitenencia.nombre_de_conexion_de_la_base_de_datos_del_inquilino', 'tenant');
             if (config("database.connections.{$tenantConnectionName}.driver") === 'sqlite') {
                 $baseDir = function_exists('database_path') ? database_path() : __DIR__.'/../../../tests/temp';

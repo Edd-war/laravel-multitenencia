@@ -20,28 +20,4 @@ class EsOrigenDelPropietario
 
         return $next($request);
     }
-
-    protected function obtenerOrigenActual(Request $request): string
-    {
-        $origin = $request->header('Origin');
-        if ($origin) {
-            $host = parse_url($origin, PHP_URL_HOST);
-            $port = parse_url($origin, PHP_URL_PORT);
-
-            return $host.($port ? ":$port" : '');
-        }
-
-        $host = $request->getHost();
-        $port = $request->getPort();
-
-        return $host.($port && $port != 80 && $port != 443 ? ":$port" : '');
-    }
-
-    protected function esDominioPropietario(string $origen): bool
-    {
-        $domain = explode(':', $origen)[0];
-        $propietarioDomains = $this->dominiosPropietarios();
-
-        return in_array($domain, $propietarioDomains, true);
-    }
 }
