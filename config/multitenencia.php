@@ -144,6 +144,11 @@ return [
     'dominios_propietarios' => [],
 
     /*
+     * Los dominios registrados para los inquilinos (tenants).
+     */
+    'dominios_inquilinos' => [],
+
+    /*
      * El prefijo que se aplicará automáticamente a los nombres de las bases de datos de los inquilinos.
      */
     'prefijo_de_base_de_datos_del_inquilino' => '',

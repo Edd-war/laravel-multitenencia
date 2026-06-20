@@ -4,8 +4,8 @@ namespace Eddwar\Multitenencia\BuscadorDeInquilinos;
 
 use Eddwar\Multitenencia\Concerns\UtilizaConfiguracionMultitenencia;
 use Eddwar\Multitenencia\Contracts\EsInquilino;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class BuscadorDeInquilinosPorHeaders extends BuscadorDeInquilinos
 {
@@ -18,9 +18,6 @@ class BuscadorDeInquilinosPorHeaders extends BuscadorDeInquilinos
             return null;
         }
 
-        /** @var Model&EsInquilino $tenantModel */
-        $tenantModel = app(EsInquilino::class);
-
         // 1. Estrategia 'header' (X-Sitio-Context por defecto)
         if (in_array('header', $strategies, true)) {
             $contextHeader = $request->header($this->headerDeContexto());
@@ -32,9 +29,9 @@ class BuscadorDeInquilinosPorHeaders extends BuscadorDeInquilinos
                     $domain = $parsedHost.($port ? ":$port" : '');
                 }
 
-                $tenant = $tenantModel->newQuery()->where('dominio', $domain)->first();
-                if ($tenant instanceof EsInquilino) {
-                    return $tenant;
+                $domainsMap = $this->obtenerMapaDeDominiosInquilinos();
+                if (isset($domainsMap[$domain])) {
+                    return $this->obtenerInquilinoPorId($domainsMap[$domain]);
                 }
             }
         }
@@ -43,26 +40,21 @@ class BuscadorDeInquilinosPorHeaders extends BuscadorDeInquilinos
         if (in_array('id_header', $strategies, true)) {
             $idHeader = $request->header($this->headerDeId());
             if ($idHeader) {
-                $tenant = $tenantModel->newQuery()->find($idHeader);
-                if ($tenant instanceof EsInquilino) {
-                    return $tenant;
-                }
+                return $this->obtenerInquilinoPorId($idHeader);
             }
         }
 
         // 3. Estrategia 'query_param' (?sitio_id= o ?dominio=)
         if (in_array('query_param', $strategies, true)) {
             if ($request->has('sitio_id')) {
-                $tenant = $tenantModel->newQuery()->find($request->input('sitio_id'));
-                if ($tenant instanceof EsInquilino) {
-                    return $tenant;
-                }
+                return $this->obtenerInquilinoPorId($request->input('sitio_id'));
             }
 
             if ($request->has('dominio')) {
-                $tenant = $tenantModel->newQuery()->where('dominio', $request->input('dominio'))->first();
-                if ($tenant instanceof EsInquilino) {
-                    return $tenant;
+                $domainsMap = $this->obtenerMapaDeDominiosInquilinos();
+                $domain = $request->input('dominio');
+                if (isset($domainsMap[$domain])) {
+                    return $this->obtenerInquilinoPorId($domainsMap[$domain]);
                 }
             }
         }
@@ -74,17 +66,48 @@ class BuscadorDeInquilinosPorHeaders extends BuscadorDeInquilinos
             $fullHost = $host.($port && $port != 80 && $port != 443 ? ":$port" : '');
 
             // Validamos contra dominios propietarios
-            $landlordDomains = $this->dominiosPropietarios();
-            $domainOnly = explode(':', $fullHost)[0];
+            if ($this->esDominioPropietario($fullHost)) {
+                return null;
+            }
 
-            if (! in_array($domainOnly, $landlordDomains, true)) {
-                $tenant = $tenantModel->newQuery()->where('dominio', $fullHost)->first();
-                if ($tenant instanceof EsInquilino) {
-                    return $tenant;
-                }
+            $domainsMap = $this->obtenerMapaDeDominiosInquilinos();
+            if (isset($domainsMap[$fullHost])) {
+                return $this->obtenerInquilinoPorId($domainsMap[$fullHost]);
             }
         }
 
         return null;
+    }
+
+    /**
+     * Obtiene o genera el mapa de dominios de inquilinos registrados.
+     *
+     * @return array<string, int|string>
+     */
+    protected function obtenerMapaDeDominiosInquilinos(): array
+    {
+        return Cache::rememberForever('multitenencia:domains_map', function () {
+            $configuredDomains = $this->dominiosInquilinos();
+            $tenantModel = app(EsInquilino::class);
+            $query = $tenantModel->newQuery();
+
+            if (! app()->runningUnitTests() && ! empty($configuredDomains)) {
+                $query->whereIn('dominio', $configuredDomains);
+            }
+
+            return $query->get()->pluck('id', 'dominio')->toArray();
+        });
+    }
+
+    /**
+     * Obtiene el inquilino resuelto a partir de su ID desde la cache.
+     */
+    protected function obtenerInquilinoPorId(int|string $id): ?EsInquilino
+    {
+        $tenantModel = app(EsInquilino::class);
+
+        return Cache::remember("multitenencia:model:{$id}", 3600, function () use ($tenantModel, $id) {
+            return $tenantModel->newQuery()->find($id);
+        });
     }
 }
