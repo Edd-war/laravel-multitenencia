@@ -24,7 +24,7 @@ trait ImplementaInquilino
 
         $this
             ->obtenerLaClaseDeAccionDeMultitenencia(
-                actionName: 'make_tenant_current_action',
+                actionName: 'accion_hacer_inquilino_actual',
                 actionClass: AccionHacerInquilinoActual::class
             )
             ->execute($this);
@@ -36,7 +36,7 @@ trait ImplementaInquilino
     {
         $this
             ->obtenerLaClaseDeAccionDeMultitenencia(
-                actionName: 'forget_current_tenant_action',
+                actionName: 'accion_olvidar_inquilino_actual',
                 actionClass: AccionOlvidarInquilinoActual::class
             )
             ->execute($this);

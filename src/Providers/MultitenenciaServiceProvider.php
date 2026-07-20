@@ -11,6 +11,8 @@ use Eddwar\Multitenencia\Concerns\UtilizaConfiguracionMultitenencia;
 use Eddwar\Multitenencia\Contracts\EsInquilino;
 use Eddwar\Multitenencia\Multitenencia;
 use Eddwar\Multitenencia\Support\InquilinoResolver;
+use Illuminate\Cache\Repository;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
 use Laravel\Octane\Events\RequestReceived as OctaneRequestReceived;
@@ -53,14 +55,28 @@ class MultitenenciaServiceProvider extends PackageServiceProvider
 
         $tenantModelClass = config('multitenencia.modelo_del_inquilino');
         if ($tenantModelClass && class_exists($tenantModelClass)) {
-            $tenantModelClass::saved(static function ($model) {
+            $clearCache = static function ($model) {
                 Cache::forget('multitenencia:domains_map');
                 Cache::forget("multitenencia:model:{$model->id}");
-            });
-            $tenantModelClass::deleted(static function ($model) {
-                Cache::forget('multitenencia:domains_map');
-                Cache::forget("multitenencia:model:{$model->id}");
-            });
+
+                try {
+                    $cacheStore = config('multitenencia.cache.store_del_propietario') ?? config('cache.default');
+                    /** @var Repository $cache */
+                    $cache = Cache::store($cacheStore);
+                    if ($cache->supportsTags()) {
+                        $cache->tags(['tenant_resolver'])->flush();
+                    }
+                } catch (\Exception $e) {
+                    // Fail silently
+                }
+            };
+
+            $tenantModelClass::saved($clearCache);
+            $tenantModelClass::deleted($clearCache);
+
+            if (in_array(SoftDeletes::class, class_uses_recursive($tenantModelClass), true)) {
+                $tenantModelClass::restored($clearCache);
+            }
         }
     }
 

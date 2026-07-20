@@ -18,6 +18,11 @@ return [
      * Esta clase es responsable de determinar cuál inquilino debe ser el actual
      * para la solicitud dada.
      *
+     * Ejemplos:
+     * - \Eddwar\Multitenencia\BuscadorDeInquilinos\BuscadorDeInquilinosDeDominio::class
+     * - \Eddwar\Multitenencia\BuscadorDeInquilinos\BuscadorDeInquilinosPorHeaders::class
+     * - \Eddwar\Multitenencia\BuscadorDeInquilinos\BuscadorDeInquilinosConCache::class
+     *
      * Esta clase debe extender de `Eddwar\Multitenencia\BuscadorDeInquilinos\BuscadorDeInquilinos`
      */
     'buscador_de_inquilinos' => null,

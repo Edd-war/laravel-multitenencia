@@ -4,6 +4,7 @@ namespace Eddwar\Multitenencia\BuscadorDeInquilinos;
 
 use Eddwar\Multitenencia\Concerns\UtilizaConfiguracionMultitenencia;
 use Eddwar\Multitenencia\Contracts\EsInquilino;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
@@ -16,6 +17,15 @@ class BuscadorDeInquilinosPorHeaders extends BuscadorDeInquilinos
         $strategies = $this->estrategiasDeBusqueda();
         if (empty($strategies)) {
             return null;
+        }
+
+        $origen = $this->obtenerOrigenActual($request);
+        $esPropietario = $this->esDominioPropietario($origen);
+
+        // Si no proviene del dominio del propietario (landlord), forzamos estrategia 'host'
+        // para ignorar headers y query parameters que puedan ser falsificados.
+        if (! $esPropietario) {
+            $strategies = ['host'];
         }
 
         // 1. Estrategia 'header' (X-Sitio-Context por defecto)
@@ -88,6 +98,7 @@ class BuscadorDeInquilinosPorHeaders extends BuscadorDeInquilinos
     {
         return Cache::rememberForever('multitenencia:domains_map', function () {
             $configuredDomains = $this->dominiosInquilinos();
+            /** @var Model&EsInquilino $tenantModel */
             $tenantModel = app(EsInquilino::class);
             $query = $tenantModel->newQuery();
 
@@ -104,10 +115,14 @@ class BuscadorDeInquilinosPorHeaders extends BuscadorDeInquilinos
      */
     protected function obtenerInquilinoPorId(int|string $id): ?EsInquilino
     {
+        /** @var Model&EsInquilino $tenantModel */
         $tenantModel = app(EsInquilino::class);
 
-        return Cache::remember("multitenencia:model:{$id}", 3600, function () use ($tenantModel, $id) {
+        /** @var EsInquilino|null $resolved */
+        $resolved = Cache::remember("multitenencia:model:{$id}", 3600, function () use ($tenantModel, $id) {
             return $tenantModel->newQuery()->find($id);
         });
+
+        return $resolved;
     }
 }

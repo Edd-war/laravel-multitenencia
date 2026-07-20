@@ -12,10 +12,10 @@ class Propietario
 
         app(EsInquilino::class)::olvidarActual();
 
-        $result = $callable();
-
-        $originalCurrentTenant?->hacerActual();
-
-        return $result;
+        try {
+            return $callable();
+        } finally {
+            $originalCurrentTenant?->hacerActual();
+        }
     }
 }
