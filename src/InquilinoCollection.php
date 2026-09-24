@@ -53,7 +53,7 @@ final class InquilinoCollection extends Collection
         $collection = $this->$operation(fn (EsInquilino $tenant) => $tenant->execute($callable));
 
         /** @var static<TKey, TValue> $newCollection */
-        $newCollection = new static($collection->items);
+        $newCollection = new self($collection->items);
 
         return $newCollection;
     }
